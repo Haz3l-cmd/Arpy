@@ -207,7 +207,7 @@ class Arpy:
            self.__get_mac(target)
    
     def set_mac(self,mac:str): 
-        """setter methos which changes MAC address of attacker
+        """setter method which changes MAC address of attacker
            param mac: MAC address to change to
         """
         self.__LOCAL_MAC = mac
@@ -267,8 +267,8 @@ class Arpy:
 
 if __name__ == "__main__":
     
-    """The code below initialises parses command line arguement"""
-    parser = argparse.ArgumentParser(formatter_class = argparse.RawTextHelpFormatter,description="This script shows how easily a malicious user can cause a Denial Of Service attack in a home network once he is connect to it. NOTE : This is for demonstration purposes only and will not work in an enterprise environment where security mechanisms such as dynamic ARP inspection(DAI) are enabled.\n\n To truly how this work I would recommed to use wireshark",epilog="Example:\n\tsudo python3 arp_dos.py -S 192.168.100.0/24 -T 192.168.100.112 -G 192.168.100.1\n\tsudo python3 arp_dos.py  -T 192.168.100.112 -G 192.168.100.1\n\tsudo python3 arp_dos.py  -S 192.168.100.0/24 -G 192.168.100.1" )
+    """The code below  parses command line arguement"""
+    parser = argparse.ArgumentParser(formatter_class = argparse.RawTextHelpFormatter,description="This script shows how easily a malicious user can cause a Denial Of Service attack in a home network once he is connect to it. NOTE : This is for demonstration purposes only and will not work in an enterprise environment where security mechanisms such as dynamic ARP inspection(DAI) are enabled.\n\n To truly how this work I would recommed to use wireshark",epilog="Example:\n\tsudo python3 arp_dos.py -S 192.168.100.0/24 -Tgt 192.168.100.112 -G 192.168.100.1\n\tsudo python3 arp_dos.py  -T 192.168.100.112 -G 192.168.100.1 -T 15 \n\tsudo python3 arp_dos.py  -S 192.168.100.0/24 -G 192.168.100.1 -T 25 -2" )
     parser.add_argument("-S","--subnet",help="Network address of subnet e.g 192.168.100.0/24",metavar="subnet_ip", required=True, dest="subnet",type=str)
     parser.add_argument("-G","--gateway", help="IP address of default gateway",metavar="gateway_ip ",required=True,dest="gateway_ip")
     parser.add_argument("-Tgt", "--target", help="Ip address of target", dest="target", required=False, default=None)
